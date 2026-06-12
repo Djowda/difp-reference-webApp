@@ -2,31 +2,31 @@ import { init, geoToCell, DifpClient } from './difp-browser.js';
 
 // ─── Product catalog (25 items) ───────────────────────────────────────────
 const PRODUCTS = [
-  {id:1, name:'Ail',           img:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Garlic_bulb.jpg/200px-Garlic_bulb.jpg'},
-  {id:2, name:'Artichaut',     img:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Artichoke_1.jpg/200px-Artichoke_1.jpg'},
-  {id:3, name:'Asperges',      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Asparagus_officinalis_0.02.jpg/200px-Asparagus_officinalis_0.02.jpg'},
-  {id:4, name:'Betterave',     img:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Beetroot_close_up.jpg/200px-Beetroot_close_up.jpg'},
-  {id:5, name:'Cardon',        img:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Cynara_cardunculus_cultivated.jpg/200px-Cynara_cardunculus_cultivated.jpg'},
-  {id:6, name:'Carotte',       img:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Stubs_0001.jpg/200px-Stubs_0001.jpg'},
-  {id:7, name:'Chou-Fleur',    img:'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/WhiteCauliflower.jpg/200px-WhiteCauliflower.jpg'},
-  {id:8, name:'Chou',          img:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Brassica_oleracea_2.jpg/200px-Brassica_oleracea_2.jpg'},
-  {id:9, name:'Concombre',     img:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Cucumbers_-_whole_and_slice.jpg/200px-Cucumbers_-_whole_and_slice.jpg'},
-  {id:10,name:'Courgette',     img:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Courgettes.jpg/200px-Courgettes.jpg'},
-  {id:11,name:'Datte',         img:'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Date_palm_fruits.jpg/200px-Date_palm_fruits.jpg'},
-  {id:12,name:'Kiwi',          img:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Kiwifruit_cross_section.jpg/200px-Kiwifruit_cross_section.jpg'},
-  {id:13,name:'Pastèque',      img:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Watermelon_seedless_2009_16x9.jpg/200px-Watermelon_seedless_2009_16x9.jpg'},
-  {id:14,name:'Pomme',         img:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/200px-Red_Apple.jpg'},
-  {id:15,name:'Prune jaune',   img:'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Yellow_plum.jpg/200px-Yellow_plum.jpg'},
-  {id:16,name:'Prune rouge',   img:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Prunus_domestica-Mirabelle.jpg/200px-Prunus_domestica-Mirabelle.jpg'},
-  {id:17,name:'Raisin rouge',  img:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Grape_vines.jpg/200px-Grape_vines.jpg'},
-  {id:18,name:'Orange',        img:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Oranges_and_orange_juice.jpg/200px-Oranges_and_orange_juice.jpg'},
-  {id:19,name:'Tomate',        img:'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Tomato_je.jpg/200px-Tomato_je.jpg'},
-  {id:20,name:'Oignon',        img:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Onions.jpg/200px-Onions.jpg'},
-  {id:21,name:'P. de terre',   img:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Patates.jpg/200px-Patates.jpg'},
-  {id:22,name:'Haricot vert',  img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Phaseolus_vulgaris.jpg/200px-Phaseolus_vulgaris.jpg'},
-  {id:23,name:'Épinard',       img:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Spinach_in_a_bowl.jpg/200px-Spinach_in_a_bowl.jpg'},
-  {id:24,name:'Laitue',        img:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Lactuca_sativa.jpg/200px-Lactuca_sativa.jpg'},
-  {id:25,name:'Citron',        img:'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Image_created_with_a_mobile_phone.png/200px-Image_created_with_a_mobile_phone.png'},
+  {id:1, name:'Ail',           img:'/TestPad/1.webp'},
+  {id:2, name:'Artichaut',     img:'/TestPad/2.webp'},
+  {id:3, name:'Asperges',      img:'/TestPad/3.webp'},
+  {id:4, name:'Betterave',     img:'/TestPad/4.webp'},
+  {id:5, name:'Cardon',        img:'/TestPad/5.webp'},
+  {id:6, name:'Carotte',       img:'/TestPad/6.webp'},
+  {id:7, name:'Chou-Fleur',    img:'/TestPad/7.webp'},
+  {id:8, name:'Chou',          img:'/TestPad/8.webp'},
+  {id:9, name:'Concombre',     img:'/TestPad/9.webp'},
+  {id:10,name:'Courgette',     img:'/TestPad/10.webp'},
+  {id:11,name:'Datte',         img:'/TestPad/11.webp'},
+  {id:12,name:'Kiwi',          img:'/TestPad/12.webp'},
+  {id:13,name:'Pastèque',      img:'/TestPad/13.webp'},
+  {id:14,name:'Pomme',         img:'/TestPad/14.webp'},
+  {id:15,name:'Prune jaune',   img:'/TestPad/15.webp'},
+  {id:16,name:'Prune rouge',   img:'/TestPad/16.webp'},
+  {id:17,name:'Raisin rouge',  img:'/TestPad/17.webp'},
+  {id:18,name:'Orange',        img:'/TestPad/18.webp'},
+  {id:19,name:'Tomate',        img:'/TestPad/19.webp'},
+  {id:20,name:'Oignon',        img:'/TestPad/20.webp'},
+  {id:21,name:'P. de terre',   img:'/TestPad/21.webp'},
+  {id:22,name:'Haricot vert',  img:'/TestPad/22.webp'},
+  {id:23,name:'Épinard',       img:'/TestPad/23.webp'},
+  {id:24,name:'Laitue',        img:'/TestPad/24.webp'},
+  {id:25,name:'Citron',        img:'/TestPad/25.webp'},
 ];
 
 const TYPE_LABELS = {s:'Store',f:'Farmer',r:'Restaurant',fa:'Factory',w:'Wholesale',u:'User',sp:'Seed',t:'Transport',d:'Delivery',a:'Admin'};
@@ -81,12 +81,29 @@ function toggleSwitch(id) {
 }
 
 function avatarUrl(cT, aI) {
-  // Avatars are shipped as .svg files in the package under /npm/assets/avatars/<type>/<id>.svg
-  // The UI img onerror handlers provide fallback chain (try webp, then CDN, then inline SVG).
   const type = cT || 's';
   const id = aI || 1;
-  return `/npm/assets/avatars/${type}/${id}.svg`;
+  return `/npm/assets/avatars/${type}/${id}.webp`;
 }
+
+// Global avatar error handler (using capture phase because error events don't bubble)
+document.addEventListener('error', e => {
+  const img = e.target;
+  if (!img || img.tagName !== 'IMG' || !img.dataset.type) return;
+
+  const type = img.dataset.type;
+  const id   = img.dataset.id || 1;
+  const cur  = img.src || '';
+
+  if (cur.includes('/npm/assets')) {
+    // Fallback 1: unpkg CDN
+    img.src = `https://unpkg.com/@djowda/difp/assets/avatars/${type}/${id}.webp`;
+  } else if (cur.includes('unpkg.com')) {
+    // Fallback 2: inline SVG emoji
+    const emoji = TYPE_EMOJI[type] || '🏪';
+    img.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">${encodeURIComponent(emoji)}</text></svg>`;
+  }
+}, true);
 
 // ─── JOIN ─────────────────────────────────────────────────────────────────
 async function doJoin() {
@@ -163,41 +180,9 @@ function updateProfile() {
   $('myType').textContent  = (myData.type || 's').toUpperCase();
   $('myCellId').textContent = myData.cellId || '—';
   const av = $('myAvatar');
+  av.dataset.type = myData.type || 's';
+  av.dataset.id   = myData.avatarId || 1;
   av.src = avatarUrl(myData.type, myData.avatarId || 1);
-  // Fallback chain:
-  // 1) Try local packaged asset: ./npm/assets/avatars/<type>/<id>.webp (returned above)
-  // 2) If that fails, try the remote CDN path on djowda.dz
-  // 3) If that also fails, use inline SVG fallback image
-  av.onerror = function() {
-    try {
-      const cur = (this.src || '').toString();
-      // If local .svg missing, try local .webp
-      if (cur.includes('/npm/assets')) {
-        if (cur.endsWith('.svg')) {
-          this.onerror = null;
-          this.src = cur.replace(/\.svg$/i, '.webp');
-          return;
-        }
-        if (cur.endsWith('.webp')) {
-          // try remote CDN svg
-          this.onerror = null;
-          this.src = `https://djowda.dz/assets/avatars/${type}/${id}.svg`;
-          return;
-        }
-      }
-      // If CDN .svg attempted, try CDN .webp next
-      if (cur.startsWith('https://djowda.dz')) {
-        if (cur.endsWith('.svg')) {
-          this.onerror = null;
-          this.src = cur.replace(/\.svg$/i, '.webp');
-          return;
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-    this.src = FALLBACK_IMG;
-  };
   av.style.display = '';
 
   const pub = myData.pubkey || '';
@@ -433,6 +418,13 @@ async function doDiscover() {
   }
 }
 
+function esc(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function renderDiscoverResults(comps, cellId) {
   const wrap = $('discoverResults');
   if (!comps.length) {
@@ -444,83 +436,52 @@ function renderDiscoverResults(comps, cellId) {
       </div>`;
     return;
   }
-  wrap.innerHTML = `<p class="result-header">Found <strong>${comps.length}</strong> component${comps.length!==1?'s':''} — Cell <strong>${cellId}</strong></p>`;
+
+  const frag = document.createDocumentFragment();
+  const hdr = document.createElement('p');
+  hdr.className = 'result-header';
+  hdr.innerHTML = `Found <strong>${comps.length}</strong> component${comps.length!==1?'s':''} — Cell <strong>${cellId}</strong>`;
+  frag.appendChild(hdr);
+
   comps.forEach(comp => {
     const div = document.createElement('div');
     div.className = 'component-card';
     const isOpen = comp.s !== false;
+    const type = comp.cT || 's';
+    const aid  = comp.aI || 1;
+    const name = esc(comp.n || 'Unknown');
+    const label = esc(TYPE_LABELS[type] || '?');
+    const cell = esc(String(comp.cI || '—'));
+    const phone = esc(comp.pN || '');
+
     div.innerHTML = `
-      <img class="comp-avatar" src="${avatarUrl(comp.cT, comp.aI)}" alt="" />
+      <img class="comp-avatar" src="${avatarUrl(type, aid)}" alt=""
+           data-type="${type}" data-id="${aid}" loading="lazy" />
       <div class="comp-info">
-        <div class="comp-name">${comp.n || 'Unknown'}</div>
-        <div class="comp-meta">${TYPE_LABELS[comp.cT]||'?'} · Cell: ${comp.cI||'—'} · ${comp.pN||''}</div>
+        <div class="comp-name">${name}</div>
+        <div class="comp-meta">${label} · Cell: ${cell} · ${phone}</div>
         <div class="comp-flags">
           ${comp.as ? '<span class="flag ask">Asking</span>' : ''}
           ${comp.do ? '<span class="flag donate">Donating</span>' : ''}
         </div>
       </div>
       <div class="comp-dot ${isOpen?'open':'closed'}"></div>`;
-     div.querySelector('.comp-avatar').onerror = function(){
-       try {
-         const cur = (this.src || '').toString();
-         if (cur.includes('/npm/assets')) {
-           if (cur.endsWith('.svg')) {
-             this.onerror = null;
-             this.src = cur.replace(/\.svg$/i, '.webp');
-             return;
-           }
-           if (cur.endsWith('.webp')) {
-             // try remote CDN svg
-             this.onerror = function(){ this.src = `data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect fill=\"%23f3f4f6\" width=\"100\" height=\"100\"/><text y=\"62\" x=\"50\" text-anchor=\"middle\" font-size=\"42\">${encodeURIComponent(TYPE_EMOJI[comp.cT]||'🏪')}</text></svg>`; };
-             this.src = `https://djowda.dz/assets/avatars/${comp.cT}/${comp.aI}.svg`;
-             return;
-           }
-         }
-         if (cur.startsWith('https://djowda.dz')) {
-           if (cur.endsWith('.svg')) {
-             this.onerror = null;
-             this.src = cur.replace(/\.svg$/i, '.webp');
-             return;
-           }
-         }
-       } catch (e) {}
-       this.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">${encodeURIComponent(TYPE_EMOJI[comp.cT]||'🏪')}</text></svg>`;
-     };
     div.addEventListener('click', () => openCompDetail(comp));
-    wrap.appendChild(div);
+    frag.appendChild(div);
   });
+
+  wrap.innerHTML = '';
+  wrap.appendChild(frag);
 }
 
 // ─── COMPONENT DETAIL ────────────────────────────────────────────────────
 async function openCompDetail(comp) {
   $('compDetailName').textContent = comp.n || 'Unknown';
   $('compDetailMeta').textContent = `${TYPE_LABELS[comp.cT]||'?'} · ${comp.pN||''} · Cell ${comp.cI||'—'}`;
-  $('compDetailAvatar').src = avatarUrl(comp.cT, comp.aI);
-   $('compDetailAvatar').onerror = function(){
-     try {
-       const cur = (this.src || '').toString();
-       if (cur.includes('/npm/assets')) {
-         if (cur.endsWith('.svg')) {
-           this.onerror = null;
-           this.src = cur.replace(/\.svg$/i, '.webp');
-           return;
-         }
-         if (cur.endsWith('.webp')) {
-           this.onerror = function(){ this.src = `data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect fill=\"%23f3f4f6\" width=\"100\" height=\"100\"/><text y=\"62\" x=\"50\" text-anchor=\"middle\" font-size=\"42\">🏪</text></svg>`; };
-           this.src = `https://djowda.dz/assets/avatars/${comp.cT}/${comp.aI}.svg`;
-           return;
-         }
-       }
-       if (cur.startsWith('https://djowda.dz')) {
-         if (cur.endsWith('.svg')) {
-           this.onerror = null;
-           this.src = cur.replace(/\.svg$/i, '.webp');
-           return;
-         }
-       }
-     } catch (e) {}
-     this.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">🏪</text></svg>`;
-   };
+  const av = $('compDetailAvatar');
+  av.dataset.type = comp.cT || 's';
+  av.dataset.id   = comp.aI || 1;
+  av.src = avatarUrl(comp.cT, comp.aI || 1);
 
   // Reset tabs and show loading
   switchDetailTab('products');
@@ -550,16 +511,17 @@ function renderRemoteListingGrid(gridId, entries) {
   grid.innerHTML = '';
   entries.forEach(e => {
     const p = PRODUCTS.find(p => p.id===e.productId) || {name:`#${e.productId}`,img:''};
+    const name = esc(p.name);
     const price = (e.price/100).toFixed(1);
     const div = document.createElement('div');
     div.className = 'product-card';
     div.innerHTML = `
       <div class="product-img-wrap">
-        <img class="product-img" src="${p.img}" alt="${p.name}" loading="lazy" />
+        <img class="product-img" src="${p.img}" alt="${name}" loading="lazy" />
         <div class="product-badge available"></div>
       </div>
       <div class="product-info">
-        <div class="product-name">${p.name}</div>
+        <div class="product-name">${name}</div>
         <div class="product-price">${price} DA</div>
         <div class="product-status">Dispo</div>
       </div>`;
@@ -574,15 +536,16 @@ function renderRemoteIdGrid(gridId, ids, badgeClass) {
   grid.innerHTML = '';
   ids.forEach(id => {
     const p = PRODUCTS.find(p => p.id===id) || {name:`#${id}`,img:''};
+    const name = esc(p.name);
     const div = document.createElement('div');
     div.className = 'product-card';
     div.innerHTML = `
       <div class="product-img-wrap">
-        <img class="product-img" src="${p.img}" alt="${p.name}" loading="lazy" />
+        <img class="product-img" src="${p.img}" alt="${name}" loading="lazy" />
         <div class="product-badge ${badgeClass}"></div>
       </div>
       <div class="product-info">
-        <div class="product-name">${p.name}</div>
+        <div class="product-name">${name}</div>
         <div class="product-price">KG</div>
         <div class="product-status">${badgeClass==='ask'?'Asking':'Donating'}</div>
       </div>`;
@@ -618,14 +581,13 @@ function switchDetailTab(tab) {
 
 // ─── WIRE UP ALL EVENTS ───────────────────────────────────────────────────
 
-// Wire up all event listeners immediately and also on DOMContentLoaded
+// Wire up all event listeners
 function setupAllListeners() {
   console.log('[DIFP] Setting up event listeners');
   
   // Type selector buttons
   document.querySelectorAll('.type-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      console.log('[DIFP] Type button clicked');
       document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     });
@@ -634,19 +596,12 @@ function setupAllListeners() {
   // Join button
   const joinBtn = $('joinBtn');
   if (joinBtn) {
-    console.log('[DIFP] Found join button, attaching listener');
-    joinBtn.addEventListener('click', () => {
-      console.log('[DIFP] Join button clicked');
-      doJoin();
-    });
-  } else {
-    console.warn('[DIFP] Join button not found');
+    joinBtn.addEventListener('click', doJoin);
   }
 
   // Range slider label
   const rangeSlider = $('rangeSlider');
   if (rangeSlider) {
-    console.log('[DIFP] Found range slider, attaching listener');
     rangeSlider.addEventListener('input', e => {
       $('rangeVal').textContent = e.target.value + ' lobbie' + (e.target.value==='1'?'':'s');
     });
@@ -673,7 +628,6 @@ function setupAllListeners() {
     'toggleSwitch-donate':     () => toggleSwitch('donateSwitch'),
   };
 
-  console.log('[DIFP] Setting up event delegation with ACTION_MAP');
   document.addEventListener('click', function handleDocumentClick(e) {
     const el = e.target.closest('[data-action]');
     if (!el) return;
@@ -681,22 +635,16 @@ function setupAllListeners() {
     const action = el.getAttribute('data-action');
     if (!action) return;
     
-    console.log('[DIFP] Clicked action:', action);
-
     // Handle closeModal actions
     if (action.startsWith('closeModal-')) {
       const modalId = action.replace('closeModal-','');
-      console.log('[DIFP] Closing modal:', modalId);
       closeModal(modalId);
       return;
     }
     
     // Handle actions from map
     if (ACTION_MAP.hasOwnProperty(action) && typeof ACTION_MAP[action] === 'function') {
-      console.log('[DIFP] Executing mapped action:', action);
       ACTION_MAP[action]();
-    } else {
-      console.warn('[DIFP] Action not in map or not a function:', action);
     }
   });
 
@@ -704,24 +652,16 @@ function setupAllListeners() {
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function handleModalBackdropClick(e) {
       if (e.target === overlay) {
-        console.log('[DIFP] Modal backdrop clicked, closing');
         overlay.classList.remove('show');
       }
     });
   });
-  
-  console.log('[DIFP] All event listeners attached');
 }
 
-// Try to set up immediately if DOM is ready
+// Module entry point
 if (document.readyState === 'loading') {
-  console.log('[DIFP] DOM state is "loading", waiting for DOMContentLoaded');
   document.addEventListener('DOMContentLoaded', setupAllListeners);
 } else {
-  console.log('[DIFP] DOM state is "' + document.readyState + '", setting up now');
   setupAllListeners();
 }
-
-// Also set up on DOMContentLoaded as a safety measure
-document.addEventListener('DOMContentLoaded', setupAllListeners);
 console.log('[DIFP] Module loaded');
