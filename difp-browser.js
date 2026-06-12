@@ -1097,8 +1097,9 @@ var DifpClient = class {
    * e.g. avatarPath('s', 3) → 'assets/avatars/s/3.webp'
    */
   static avatarPath(componentType, avatarId) {
-    // Match project layout: /npm/assets/avatars/<componentType>/<avatarId>.webp
-    return `/npm/assets/avatars/${componentType}/${avatarId}.webp`;
+    // Match project layout: npm/assets/avatars/<componentType>/<avatarId>.webp
+    // Use npm/ prefix because avatar assets are packaged under the npm/assets directory.
+    return `npm/assets/avatars/${componentType}/${avatarId}.webp`;
   }
   // ─── Disconnect ───────────────────────────────────────────────────────────
   /** Cleanly disconnect from the relay */
