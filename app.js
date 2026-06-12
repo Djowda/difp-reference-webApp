@@ -81,11 +81,23 @@ function toggleSwitch(id) {
 }
 
 function avatarUrl(cT, aI) {
-  // Avatars are shipped as .svg files in the package under /npm/assets/avatars/<type>/<id>.svg
-  // The UI img onerror handlers provide fallback chain (try webp, then CDN, then inline SVG).
   const type = cT || 's';
   const id = aI || 1;
-  return `/npm/assets/avatars/${type}/${id}.svg`;
+  return `/npm/assets/avatars/${type}/${id}.webp`;
+}
+
+function setupAvatarError(img, type, id) {
+  img.onerror = function() {
+    const emoji = TYPE_EMOJI[type] || '🏪';
+    const fallback = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">${encodeURIComponent(emoji)}</text></svg>`;
+    const cur = this.src || '';
+    if (cur.includes('/npm/assets')) {
+      // Fallback to unpkg
+      this.src = `https://unpkg.com/@djowda/difp/assets/avatars/${type}/${id}.webp`;
+    } else {
+      this.src = fallback;
+    }
+  };
 }
 
 // ─── JOIN ─────────────────────────────────────────────────────────────────
@@ -163,41 +175,8 @@ function updateProfile() {
   $('myType').textContent  = (myData.type || 's').toUpperCase();
   $('myCellId').textContent = myData.cellId || '—';
   const av = $('myAvatar');
+  setupAvatarError(av, myData.type, myData.avatarId || 1);
   av.src = avatarUrl(myData.type, myData.avatarId || 1);
-  // Fallback chain:
-  // 1) Try local packaged asset: ./npm/assets/avatars/<type>/<id>.webp (returned above)
-  // 2) If that fails, try the remote CDN path on djowda.dz
-  // 3) If that also fails, use inline SVG fallback image
-  av.onerror = function() {
-    try {
-      const cur = (this.src || '').toString();
-      // If local .svg missing, try local .webp
-      if (cur.includes('/npm/assets')) {
-        if (cur.endsWith('.svg')) {
-          this.onerror = null;
-          this.src = cur.replace(/\.svg$/i, '.webp');
-          return;
-        }
-        if (cur.endsWith('.webp')) {
-          // try remote CDN svg
-          this.onerror = null;
-          this.src = `https://djowda.dz/assets/avatars/${type}/${id}.svg`;
-          return;
-        }
-      }
-      // If CDN .svg attempted, try CDN .webp next
-      if (cur.startsWith('https://djowda.dz')) {
-        if (cur.endsWith('.svg')) {
-          this.onerror = null;
-          this.src = cur.replace(/\.svg$/i, '.webp');
-          return;
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-    this.src = FALLBACK_IMG;
-  };
   av.style.display = '';
 
   const pub = myData.pubkey || '';
@@ -449,8 +428,9 @@ function renderDiscoverResults(comps, cellId) {
     const div = document.createElement('div');
     div.className = 'component-card';
     const isOpen = comp.s !== false;
+    const avSrc = avatarUrl(comp.cT, comp.aI || 1);
     div.innerHTML = `
-      <img class="comp-avatar" src="${avatarUrl(comp.cT, comp.aI)}" alt="" />
+      <img class="comp-avatar" alt="" />
       <div class="comp-info">
         <div class="comp-name">${comp.n || 'Unknown'}</div>
         <div class="comp-meta">${TYPE_LABELS[comp.cT]||'?'} · Cell: ${comp.cI||'—'} · ${comp.pN||''}</div>
@@ -460,32 +440,9 @@ function renderDiscoverResults(comps, cellId) {
         </div>
       </div>
       <div class="comp-dot ${isOpen?'open':'closed'}"></div>`;
-     div.querySelector('.comp-avatar').onerror = function(){
-       try {
-         const cur = (this.src || '').toString();
-         if (cur.includes('/npm/assets')) {
-           if (cur.endsWith('.svg')) {
-             this.onerror = null;
-             this.src = cur.replace(/\.svg$/i, '.webp');
-             return;
-           }
-           if (cur.endsWith('.webp')) {
-             // try remote CDN svg
-             this.onerror = function(){ this.src = `data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect fill=\"%23f3f4f6\" width=\"100\" height=\"100\"/><text y=\"62\" x=\"50\" text-anchor=\"middle\" font-size=\"42\">${encodeURIComponent(TYPE_EMOJI[comp.cT]||'🏪')}</text></svg>`; };
-             this.src = `https://djowda.dz/assets/avatars/${comp.cT}/${comp.aI}.svg`;
-             return;
-           }
-         }
-         if (cur.startsWith('https://djowda.dz')) {
-           if (cur.endsWith('.svg')) {
-             this.onerror = null;
-             this.src = cur.replace(/\.svg$/i, '.webp');
-             return;
-           }
-         }
-       } catch (e) {}
-       this.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">${encodeURIComponent(TYPE_EMOJI[comp.cT]||'🏪')}</text></svg>`;
-     };
+     const img = div.querySelector('.comp-avatar');
+     setupAvatarError(img, comp.cT, comp.aI || 1);
+     img.src = avSrc;
     div.addEventListener('click', () => openCompDetail(comp));
     wrap.appendChild(div);
   });
@@ -495,32 +452,8 @@ function renderDiscoverResults(comps, cellId) {
 async function openCompDetail(comp) {
   $('compDetailName').textContent = comp.n || 'Unknown';
   $('compDetailMeta').textContent = `${TYPE_LABELS[comp.cT]||'?'} · ${comp.pN||''} · Cell ${comp.cI||'—'}`;
-  $('compDetailAvatar').src = avatarUrl(comp.cT, comp.aI);
-   $('compDetailAvatar').onerror = function(){
-     try {
-       const cur = (this.src || '').toString();
-       if (cur.includes('/npm/assets')) {
-         if (cur.endsWith('.svg')) {
-           this.onerror = null;
-           this.src = cur.replace(/\.svg$/i, '.webp');
-           return;
-         }
-         if (cur.endsWith('.webp')) {
-           this.onerror = function(){ this.src = `data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect fill=\"%23f3f4f6\" width=\"100\" height=\"100\"/><text y=\"62\" x=\"50\" text-anchor=\"middle\" font-size=\"42\">🏪</text></svg>`; };
-           this.src = `https://djowda.dz/assets/avatars/${comp.cT}/${comp.aI}.svg`;
-           return;
-         }
-       }
-       if (cur.startsWith('https://djowda.dz')) {
-         if (cur.endsWith('.svg')) {
-           this.onerror = null;
-           this.src = cur.replace(/\.svg$/i, '.webp');
-           return;
-         }
-       }
-     } catch (e) {}
-     this.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">🏪</text></svg>`;
-   };
+  setupAvatarError($('compDetailAvatar'), comp.cT, comp.aI || 1);
+  $('compDetailAvatar').src = avatarUrl(comp.cT, comp.aI || 1);
 
   // Reset tabs and show loading
   switchDetailTab('products');
@@ -618,14 +551,13 @@ function switchDetailTab(tab) {
 
 // ─── WIRE UP ALL EVENTS ───────────────────────────────────────────────────
 
-// Wire up all event listeners immediately and also on DOMContentLoaded
+// Wire up all event listeners
 function setupAllListeners() {
   console.log('[DIFP] Setting up event listeners');
   
   // Type selector buttons
   document.querySelectorAll('.type-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      console.log('[DIFP] Type button clicked');
       document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     });
@@ -634,19 +566,12 @@ function setupAllListeners() {
   // Join button
   const joinBtn = $('joinBtn');
   if (joinBtn) {
-    console.log('[DIFP] Found join button, attaching listener');
-    joinBtn.addEventListener('click', () => {
-      console.log('[DIFP] Join button clicked');
-      doJoin();
-    });
-  } else {
-    console.warn('[DIFP] Join button not found');
+    joinBtn.addEventListener('click', doJoin);
   }
 
   // Range slider label
   const rangeSlider = $('rangeSlider');
   if (rangeSlider) {
-    console.log('[DIFP] Found range slider, attaching listener');
     rangeSlider.addEventListener('input', e => {
       $('rangeVal').textContent = e.target.value + ' lobbie' + (e.target.value==='1'?'':'s');
     });
@@ -673,7 +598,6 @@ function setupAllListeners() {
     'toggleSwitch-donate':     () => toggleSwitch('donateSwitch'),
   };
 
-  console.log('[DIFP] Setting up event delegation with ACTION_MAP');
   document.addEventListener('click', function handleDocumentClick(e) {
     const el = e.target.closest('[data-action]');
     if (!el) return;
@@ -681,22 +605,16 @@ function setupAllListeners() {
     const action = el.getAttribute('data-action');
     if (!action) return;
     
-    console.log('[DIFP] Clicked action:', action);
-
     // Handle closeModal actions
     if (action.startsWith('closeModal-')) {
       const modalId = action.replace('closeModal-','');
-      console.log('[DIFP] Closing modal:', modalId);
       closeModal(modalId);
       return;
     }
     
     // Handle actions from map
     if (ACTION_MAP.hasOwnProperty(action) && typeof ACTION_MAP[action] === 'function') {
-      console.log('[DIFP] Executing mapped action:', action);
       ACTION_MAP[action]();
-    } else {
-      console.warn('[DIFP] Action not in map or not a function:', action);
     }
   });
 
@@ -704,24 +622,16 @@ function setupAllListeners() {
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function handleModalBackdropClick(e) {
       if (e.target === overlay) {
-        console.log('[DIFP] Modal backdrop clicked, closing');
         overlay.classList.remove('show');
       }
     });
   });
-  
-  console.log('[DIFP] All event listeners attached');
 }
 
-// Try to set up immediately if DOM is ready
+// Module entry point
 if (document.readyState === 'loading') {
-  console.log('[DIFP] DOM state is "loading", waiting for DOMContentLoaded');
   document.addEventListener('DOMContentLoaded', setupAllListeners);
 } else {
-  console.log('[DIFP] DOM state is "' + document.readyState + '", setting up now');
   setupAllListeners();
 }
-
-// Also set up on DOMContentLoaded as a safety measure
-document.addEventListener('DOMContentLoaded', setupAllListeners);
 console.log('[DIFP] Module loaded');
