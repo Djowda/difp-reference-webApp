@@ -86,19 +86,24 @@ function avatarUrl(cT, aI) {
   return `/npm/assets/avatars/${type}/${id}.webp`;
 }
 
-function setupAvatarError(img, type, id) {
-  img.onerror = function() {
+// Global avatar error handler (using capture phase because error events don't bubble)
+document.addEventListener('error', e => {
+  const img = e.target;
+  if (!img || img.tagName !== 'IMG' || !img.dataset.type) return;
+
+  const type = img.dataset.type;
+  const id   = img.dataset.id || 1;
+  const cur  = img.src || '';
+
+  if (cur.includes('/npm/assets')) {
+    // Fallback 1: unpkg CDN
+    img.src = `https://unpkg.com/@djowda/difp/assets/avatars/${type}/${id}.webp`;
+  } else if (cur.includes('unpkg.com')) {
+    // Fallback 2: inline SVG emoji
     const emoji = TYPE_EMOJI[type] || '🏪';
-    const fallback = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">${encodeURIComponent(emoji)}</text></svg>`;
-    const cur = this.src || '';
-    if (cur.includes('/npm/assets')) {
-      // Fallback to unpkg
-      this.src = `https://unpkg.com/@djowda/difp/assets/avatars/${type}/${id}.webp`;
-    } else {
-      this.src = fallback;
-    }
-  };
-}
+    img.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">${encodeURIComponent(emoji)}</text></svg>`;
+  }
+}, true);
 
 // ─── JOIN ─────────────────────────────────────────────────────────────────
 async function doJoin() {
@@ -175,7 +180,8 @@ function updateProfile() {
   $('myType').textContent  = (myData.type || 's').toUpperCase();
   $('myCellId').textContent = myData.cellId || '—';
   const av = $('myAvatar');
-  setupAvatarError(av, myData.type, myData.avatarId || 1);
+  av.dataset.type = myData.type || 's';
+  av.dataset.id   = myData.avatarId || 1;
   av.src = avatarUrl(myData.type, myData.avatarId || 1);
   av.style.display = '';
 
@@ -412,6 +418,13 @@ async function doDiscover() {
   }
 }
 
+function esc(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function renderDiscoverResults(comps, cellId) {
   const wrap = $('discoverResults');
   if (!comps.length) {
@@ -423,37 +436,52 @@ function renderDiscoverResults(comps, cellId) {
       </div>`;
     return;
   }
-  wrap.innerHTML = `<p class="result-header">Found <strong>${comps.length}</strong> component${comps.length!==1?'s':''} — Cell <strong>${cellId}</strong></p>`;
+
+  const frag = document.createDocumentFragment();
+  const hdr = document.createElement('p');
+  hdr.className = 'result-header';
+  hdr.innerHTML = `Found <strong>${comps.length}</strong> component${comps.length!==1?'s':''} — Cell <strong>${cellId}</strong>`;
+  frag.appendChild(hdr);
+
   comps.forEach(comp => {
     const div = document.createElement('div');
     div.className = 'component-card';
     const isOpen = comp.s !== false;
-    const avSrc = avatarUrl(comp.cT, comp.aI || 1);
+    const type = comp.cT || 's';
+    const aid  = comp.aI || 1;
+    const name = esc(comp.n || 'Unknown');
+    const label = esc(TYPE_LABELS[type] || '?');
+    const cell = esc(String(comp.cI || '—'));
+    const phone = esc(comp.pN || '');
+
     div.innerHTML = `
-      <img class="comp-avatar" alt="" />
+      <img class="comp-avatar" src="${avatarUrl(type, aid)}" alt=""
+           data-type="${type}" data-id="${aid}" loading="lazy" />
       <div class="comp-info">
-        <div class="comp-name">${comp.n || 'Unknown'}</div>
-        <div class="comp-meta">${TYPE_LABELS[comp.cT]||'?'} · Cell: ${comp.cI||'—'} · ${comp.pN||''}</div>
+        <div class="comp-name">${name}</div>
+        <div class="comp-meta">${label} · Cell: ${cell} · ${phone}</div>
         <div class="comp-flags">
           ${comp.as ? '<span class="flag ask">Asking</span>' : ''}
           ${comp.do ? '<span class="flag donate">Donating</span>' : ''}
         </div>
       </div>
       <div class="comp-dot ${isOpen?'open':'closed'}"></div>`;
-     const img = div.querySelector('.comp-avatar');
-     setupAvatarError(img, comp.cT, comp.aI || 1);
-     img.src = avSrc;
     div.addEventListener('click', () => openCompDetail(comp));
-    wrap.appendChild(div);
+    frag.appendChild(div);
   });
+
+  wrap.innerHTML = '';
+  wrap.appendChild(frag);
 }
 
 // ─── COMPONENT DETAIL ────────────────────────────────────────────────────
 async function openCompDetail(comp) {
   $('compDetailName').textContent = comp.n || 'Unknown';
   $('compDetailMeta').textContent = `${TYPE_LABELS[comp.cT]||'?'} · ${comp.pN||''} · Cell ${comp.cI||'—'}`;
-  setupAvatarError($('compDetailAvatar'), comp.cT, comp.aI || 1);
-  $('compDetailAvatar').src = avatarUrl(comp.cT, comp.aI || 1);
+  const av = $('compDetailAvatar');
+  av.dataset.type = comp.cT || 's';
+  av.dataset.id   = comp.aI || 1;
+  av.src = avatarUrl(comp.cT, comp.aI || 1);
 
   // Reset tabs and show loading
   switchDetailTab('products');
@@ -483,16 +511,17 @@ function renderRemoteListingGrid(gridId, entries) {
   grid.innerHTML = '';
   entries.forEach(e => {
     const p = PRODUCTS.find(p => p.id===e.productId) || {name:`#${e.productId}`,img:''};
+    const name = esc(p.name);
     const price = (e.price/100).toFixed(1);
     const div = document.createElement('div');
     div.className = 'product-card';
     div.innerHTML = `
       <div class="product-img-wrap">
-        <img class="product-img" src="${p.img}" alt="${p.name}" loading="lazy" />
+        <img class="product-img" src="${p.img}" alt="${name}" loading="lazy" />
         <div class="product-badge available"></div>
       </div>
       <div class="product-info">
-        <div class="product-name">${p.name}</div>
+        <div class="product-name">${name}</div>
         <div class="product-price">${price} DA</div>
         <div class="product-status">Dispo</div>
       </div>`;
@@ -507,15 +536,16 @@ function renderRemoteIdGrid(gridId, ids, badgeClass) {
   grid.innerHTML = '';
   ids.forEach(id => {
     const p = PRODUCTS.find(p => p.id===id) || {name:`#${id}`,img:''};
+    const name = esc(p.name);
     const div = document.createElement('div');
     div.className = 'product-card';
     div.innerHTML = `
       <div class="product-img-wrap">
-        <img class="product-img" src="${p.img}" alt="${p.name}" loading="lazy" />
+        <img class="product-img" src="${p.img}" alt="${name}" loading="lazy" />
         <div class="product-badge ${badgeClass}"></div>
       </div>
       <div class="product-info">
-        <div class="product-name">${p.name}</div>
+        <div class="product-name">${name}</div>
         <div class="product-price">KG</div>
         <div class="product-status">${badgeClass==='ask'?'Asking':'Donating'}</div>
       </div>`;
