@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Djowda · DIFP Store</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ─── HEADER ──────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <span class="logo">🌾 Djowda</span>
+  <span class="header-sep">DIFP</span>
+  <div class="spacer"></div>
+  <div class="status-pill">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Offline</span>
+  </div>
+</header>
+
+<!-- ─── JOIN SCREEN ──────────────────────────────────────────────────────── -->
+<div id="joinScreen" class="join-screen">
+  <div class="join-hero">
+    <div class="join-icon">🌾</div>
+    <h1 class="join-title">Join the DIFP Network</h1>
+    <p class="join-sub">Decentralized food discovery over Nostr.<br>No account — your identity is a cryptographic keypair.</p>
+  </div>
+
+  <div class="join-card">
+    <div class="form-field">
+      <label>Store / Farm Name <span class="req">*</span></label>
+      <input type="text" id="joinName" placeholder="e.g. El Baraka Market" autocomplete="off" />
+    </div>
+    <div class="form-field">
+      <label>Phone <span class="opt">(optional)</span></label>
+      <input type="tel" id="joinPhone" placeholder="0541 138 393" />
+    </div>
+    <div class="form-field">
+      <label>Location <span class="opt">(lat, lng or leave blank for GPS)</span></label>
+      <input type="text" id="joinCoords" placeholder="35.6905, -0.6417" autocomplete="off" />
+    </div>
+
+    <div class="form-field">
+      <label>Type</label>
+      <div class="type-grid">
+        <button class="type-btn selected" data-type="s"><span class="type-emoji">🏪</span>Store</button>
+        <button class="type-btn" data-type="f"><span class="type-emoji">🌾</span>Farmer</button>
+        <button class="type-btn" data-type="r"><span class="type-emoji">🍽️</span>Restaurant</button>
+        <button class="type-btn" data-type="fa"><span class="type-emoji">🏭</span>Factory</button>
+        <button class="type-btn" data-type="w"><span class="type-emoji">📦</span>Wholesale</button>
+        <button class="type-btn" data-type="u"><span class="type-emoji">👤</span>User</button>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Working Hours</label>
+      <input type="text" id="joinHours" value="08:00_20:00" />
+    </div>
+
+    <button class="join-btn" id="joinBtn">🔗 Connect &amp; Join Network</button>
+  </div>
+
+  <p class="join-note">A secp256k1 keypair is generated &amp; stored locally in your browser.</p>
+</div>
+
+<!-- ─── MAIN APP ──────────────────────────────────────────────────────────── -->
+<div id="mainApp" style="display:none">
+
+  <nav class="nav-tabs">
+    <div class="nav-tab active" id="tab-home" data-action="tab-home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </div>
+    <div class="nav-tab" id="tab-discover" data-action="tab-discover">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Discover
+    </div>
+  </nav>
+
+  <!-- ── HOME TAB ──────────────────────────────────────────────────────── -->
+  <div id="content-home" class="tab-content active">
+    <div class="main">
+
+      <div class="card">
+        <div class="profile-header">
+          <div class="avatar-wrap">
+            <img class="avatar" id="myAvatar" src="" alt="avatar" style="display:none" />
+            <div class="avatar-type" id="myType">S</div>
+          </div>
+          <div class="profile-info">
+            <div class="profile-name" id="myName">—</div>
+            <div class="profile-meta">
+              <span id="myPhone">📞 —</span>
+              <span id="myHours">🕐 —</span>
+            </div>
+          </div>
+          <button class="edit-btn" data-action="openEditModal">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+        </div>
+
+        <div class="profile-badges">
+          <div class="badge open">● Open</div>
+          <div class="badge ask toggle" id="askBadge" data-on="0" data-action="toggleAsk">Ask Off</div>
+          <div class="badge donate toggle" id="donateBadge" data-on="0" data-action="toggleDonate">Donate Off</div>
+        </div>
+
+        <div class="cell-row">
+          <span class="cell-label">Cell ID</span>
+          <span class="cell-val" id="myCellId">—</span>
+          <span class="cell-label" style="margin-left:12px">Pubkey</span>
+          <span class="cell-val mono" id="myPubkey">—</span>
+        </div>
+
+        <div id="publishStatus" class="publish-status" style="display:none"></div>
+      </div>
+
+      <div class="card no-pad-bottom">
+        <div class="subtabs">
+          <div class="subtab active" id="stab-inventory" data-action="subtab-inventory">Inventory</div>
+          <div class="subtab" id="stab-ask"       data-action="subtab-ask">Ask</div>
+          <div class="subtab" id="stab-donate"    data-action="subtab-donate">Donate</div>
+        </div>
+        <div id="subcontent-inventory" class="subtab-body">
+          <div class="product-grid" id="inventoryGrid"></div>
+        </div>
+        <div id="subcontent-ask" class="subtab-body" style="display:none">
+          <div class="product-grid" id="askGrid"></div>
+        </div>
+        <div id="subcontent-donate" class="subtab-body" style="display:none">
+          <div class="product-grid" id="donateGrid"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── DISCOVER TAB ──────────────────────────────────────────────────── -->
+  <div id="content-discover" class="tab-content">
+    <div class="main">
+      <div class="card">
+        <div class="form-field">
+          <label>Search coordinates</label>
+          <input type="text" id="discoverCoords" placeholder="35.6905, -0.6417" />
+        </div>
+        <div class="form-field">
+          <label>— or Cell ID directly</label>
+          <input type="text" id="discoverCell" placeholder="1711935606" />
+        </div>
+        <div class="range-row">
+          <label>Range:</label>
+          <input type="range" min="0" max="10" value="3" id="rangeSlider" />
+          <span class="range-val" id="rangeVal">3 lobbies</span>
+        </div>
+        <div class="range-hint">
+          <span>~0 km</span><span>~100 km</span><span>~200 km</span>
+        </div>
+        <button class="search-btn" id="discoverBtn" data-action="doDiscover">🔍 Search Nearby</button>
+      </div>
+      <div id="discoverResults"></div>
+    </div>
+  </div>
+
+</div><!-- /mainApp -->
+
+<!-- ─── TOASTS ────────────────────────────────────────────────────────────── -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ─── EDIT MODAL ───────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Profile</div>
+    <div class="form-field"><label>Name</label><input type="text" id="editName" /></div>
+    <div class="form-field"><label>Phone</label><input type="tel" id="editPhone" /></div>
+    <div class="form-field"><label>Coordinates (lat, lng)</label><input type="text" id="editCoords" /></div>
+    <div class="form-field"><label>Working Hours</label><input type="text" id="editHours" /></div>
+    <button class="confirm-btn" data-action="saveEdit">💾 Save &amp; Publish</button>
+    <button class="cancel-btn" data-action="closeModal-editModal">Cancel</button>
+  </div>
+</div>
+
+<!-- ─── PRODUCT MODAL ────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="productModalTitle">Product</div>
+    <img class="modal-img" id="productModalImg" src="" alt="" />
+
+    <div id="productListingSection">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Available for sale</div></div>
+        <div class="switch-row">
+          <span class="sw-label">No</span>
+          <div class="switch" id="availSwitch" data-action="toggleSwitch-avail"></div>
+          <span class="sw-label">Yes</span>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Price (DA / kg)</label>
+        <div class="price-wrap">
+          <input type="number" id="productPrice" placeholder="100" min="0" step="0.5" />
+          <span class="price-unit">DA</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="productAskSection" style="display:none">
+      <div class="toggle-row">
+        <div><div class="toggle-label">I need this product</div></div>
+        <div class="switch-row">
+          <span class="sw-label">No</span>
+          <div class="switch" id="askSwitch" data-action="toggleSwitch-ask"></div>
+          <span class="sw-label">Yes</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="productDonateSection" style="display:none">
+      <div class="toggle-row">
+        <div><div class="toggle-label">I want to donate this</div></div>
+        <div class="switch-row">
+          <span class="sw-label">No</span>
+          <div class="switch" id="donateSwitch" data-action="toggleSwitch-donate"></div>
+          <span class="sw-label">Yes</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="confirm-btn" data-action="confirmProduct">Confirm</button>
+    <button class="cancel-btn" data-action="closeModal-productModal">Cancel</button>
+  </div>
+</div>
+
+<!-- ─── COMPONENT DETAIL MODAL ───────────────────────────────────────────── -->
+<div class="modal-overlay" id="compDetailModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="comp-detail-header">
+      <img id="compDetailAvatar" src="" alt="" class="comp-detail-avatar" />
+      <div style="flex:1;min-width:0">
+        <div class="modal-title" id="compDetailName">—</div>
+        <div class="comp-detail-meta" id="compDetailMeta">—</div>
+      </div>
+      <button class="close-btn" data-action="closeModal-compDetailModal">✕</button>
+    </div>
+
+    <div class="subtabs">
+      <div class="subtab active" id="dtab-products" data-action="dtab-products">Products</div>
+      <div class="subtab" id="dtab-asking"   data-action="dtab-asking">Asking</div>
+      <div class="subtab" id="dtab-donating" data-action="dtab-donating">Donating</div>
+    </div>
+
+    <div id="dcontent-products" class="subtab-body">
+      <div class="product-grid" id="detailProductsGrid"></div>
+    </div>
+    <div id="dcontent-asking" class="subtab-body" style="display:none">
+      <div class="product-grid" id="detailAskGrid"></div>
+    </div>
+    <div id="dcontent-donating" class="subtab-body" style="display:none">
+      <div class="product-grid" id="detailDonateGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
