@@ -13,6 +13,16 @@ Djowda DIFP Store is a decentralized food discovery web application built on top
 -   **Real-time Updates**: Status and listings are published as Nostr events (Kind 30420 for Presence, Kind 30421 for Catalogs).
 -   **Thematic Avatars**: Automatic thematic avatar assignment based on your component type (Store, Farmer, Restaurant, etc.), preloaded from the `@djowda/difp` package.
 
+## Screenshots
+
+| Join Screen | Home Tab |
+| :---: | :---: |
+| ![Join Screen](screenshots/1-join-screen.png) | ![Home Tab](screenshots/2-home-tab.png) |
+
+| Product Modal | Discover Tab |
+| :---: | :---: |
+| ![Product Modal](screenshots/3-product-modal.png) | ![Discover Tab](screenshots/4-discover-tab.png) |
+
 ## How it Works
 
 The application uses the `@djowda/difp` library to interact with the DIFP protocol on Nostr.

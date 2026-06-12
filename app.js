@@ -81,12 +81,29 @@ function toggleSwitch(id) {
 }
 
 function avatarUrl(cT, aI) {
-  // Avatars are shipped as .svg files in the package under /npm/assets/avatars/<type>/<id>.svg
-  // The UI img onerror handlers provide fallback chain (try webp, then CDN, then inline SVG).
   const type = cT || 's';
   const id = aI || 1;
-  return `/npm/assets/avatars/${type}/${id}.svg`;
+  return `/npm/assets/avatars/${type}/${id}.webp`;
 }
+
+// Global avatar error handler (using capture phase because error events don't bubble)
+document.addEventListener('error', e => {
+  const img = e.target;
+  if (!img || img.tagName !== 'IMG' || !img.dataset.type) return;
+
+  const type = img.dataset.type;
+  const id   = img.dataset.id || 1;
+  const cur  = img.src || '';
+
+  if (cur.includes('/npm/assets')) {
+    // Fallback 1: unpkg CDN
+    img.src = `https://unpkg.com/@djowda/difp/assets/avatars/${type}/${id}.webp`;
+  } else if (cur.includes('unpkg.com')) {
+    // Fallback 2: inline SVG emoji
+    const emoji = TYPE_EMOJI[type] || '🏪';
+    img.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">${encodeURIComponent(emoji)}</text></svg>`;
+  }
+}, true);
 
 // ─── JOIN ─────────────────────────────────────────────────────────────────
 async function doJoin() {
@@ -163,41 +180,9 @@ function updateProfile() {
   $('myType').textContent  = (myData.type || 's').toUpperCase();
   $('myCellId').textContent = myData.cellId || '—';
   const av = $('myAvatar');
+  av.dataset.type = myData.type || 's';
+  av.dataset.id   = myData.avatarId || 1;
   av.src = avatarUrl(myData.type, myData.avatarId || 1);
-  // Fallback chain:
-  // 1) Try local packaged asset: ./npm/assets/avatars/<type>/<id>.webp (returned above)
-  // 2) If that fails, try the remote CDN path on djowda.dz
-  // 3) If that also fails, use inline SVG fallback image
-  av.onerror = function() {
-    try {
-      const cur = (this.src || '').toString();
-      // If local .svg missing, try local .webp
-      if (cur.includes('/npm/assets')) {
-        if (cur.endsWith('.svg')) {
-          this.onerror = null;
-          this.src = cur.replace(/\.svg$/i, '.webp');
-          return;
-        }
-        if (cur.endsWith('.webp')) {
-          // try remote CDN svg
-          this.onerror = null;
-          this.src = `https://djowda.dz/assets/avatars/${type}/${id}.svg`;
-          return;
-        }
-      }
-      // If CDN .svg attempted, try CDN .webp next
-      if (cur.startsWith('https://djowda.dz')) {
-        if (cur.endsWith('.svg')) {
-          this.onerror = null;
-          this.src = cur.replace(/\.svg$/i, '.webp');
-          return;
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-    this.src = FALLBACK_IMG;
-  };
   av.style.display = '';
 
   const pub = myData.pubkey || '';
@@ -433,6 +418,13 @@ async function doDiscover() {
   }
 }
 
+function esc(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function renderDiscoverResults(comps, cellId) {
   const wrap = $('discoverResults');
   if (!comps.length) {
@@ -444,83 +436,52 @@ function renderDiscoverResults(comps, cellId) {
       </div>`;
     return;
   }
-  wrap.innerHTML = `<p class="result-header">Found <strong>${comps.length}</strong> component${comps.length!==1?'s':''} — Cell <strong>${cellId}</strong></p>`;
+
+  const frag = document.createDocumentFragment();
+  const hdr = document.createElement('p');
+  hdr.className = 'result-header';
+  hdr.innerHTML = `Found <strong>${comps.length}</strong> component${comps.length!==1?'s':''} — Cell <strong>${cellId}</strong>`;
+  frag.appendChild(hdr);
+
   comps.forEach(comp => {
     const div = document.createElement('div');
     div.className = 'component-card';
     const isOpen = comp.s !== false;
+    const type = comp.cT || 's';
+    const aid  = comp.aI || 1;
+    const name = esc(comp.n || 'Unknown');
+    const label = esc(TYPE_LABELS[type] || '?');
+    const cell = esc(String(comp.cI || '—'));
+    const phone = esc(comp.pN || '');
+
     div.innerHTML = `
-      <img class="comp-avatar" src="${avatarUrl(comp.cT, comp.aI)}" alt="" />
+      <img class="comp-avatar" src="${avatarUrl(type, aid)}" alt=""
+           data-type="${type}" data-id="${aid}" loading="lazy" />
       <div class="comp-info">
-        <div class="comp-name">${comp.n || 'Unknown'}</div>
-        <div class="comp-meta">${TYPE_LABELS[comp.cT]||'?'} · Cell: ${comp.cI||'—'} · ${comp.pN||''}</div>
+        <div class="comp-name">${name}</div>
+        <div class="comp-meta">${label} · Cell: ${cell} · ${phone}</div>
         <div class="comp-flags">
           ${comp.as ? '<span class="flag ask">Asking</span>' : ''}
           ${comp.do ? '<span class="flag donate">Donating</span>' : ''}
         </div>
       </div>
       <div class="comp-dot ${isOpen?'open':'closed'}"></div>`;
-     div.querySelector('.comp-avatar').onerror = function(){
-       try {
-         const cur = (this.src || '').toString();
-         if (cur.includes('/npm/assets')) {
-           if (cur.endsWith('.svg')) {
-             this.onerror = null;
-             this.src = cur.replace(/\.svg$/i, '.webp');
-             return;
-           }
-           if (cur.endsWith('.webp')) {
-             // try remote CDN svg
-             this.onerror = function(){ this.src = `data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect fill=\"%23f3f4f6\" width=\"100\" height=\"100\"/><text y=\"62\" x=\"50\" text-anchor=\"middle\" font-size=\"42\">${encodeURIComponent(TYPE_EMOJI[comp.cT]||'🏪')}</text></svg>`; };
-             this.src = `https://djowda.dz/assets/avatars/${comp.cT}/${comp.aI}.svg`;
-             return;
-           }
-         }
-         if (cur.startsWith('https://djowda.dz')) {
-           if (cur.endsWith('.svg')) {
-             this.onerror = null;
-             this.src = cur.replace(/\.svg$/i, '.webp');
-             return;
-           }
-         }
-       } catch (e) {}
-       this.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">${encodeURIComponent(TYPE_EMOJI[comp.cT]||'🏪')}</text></svg>`;
-     };
     div.addEventListener('click', () => openCompDetail(comp));
-    wrap.appendChild(div);
+    frag.appendChild(div);
   });
+
+  wrap.innerHTML = '';
+  wrap.appendChild(frag);
 }
 
 // ─── COMPONENT DETAIL ────────────────────────────────────────────────────
 async function openCompDetail(comp) {
   $('compDetailName').textContent = comp.n || 'Unknown';
   $('compDetailMeta').textContent = `${TYPE_LABELS[comp.cT]||'?'} · ${comp.pN||''} · Cell ${comp.cI||'—'}`;
-  $('compDetailAvatar').src = avatarUrl(comp.cT, comp.aI);
-   $('compDetailAvatar').onerror = function(){
-     try {
-       const cur = (this.src || '').toString();
-       if (cur.includes('/npm/assets')) {
-         if (cur.endsWith('.svg')) {
-           this.onerror = null;
-           this.src = cur.replace(/\.svg$/i, '.webp');
-           return;
-         }
-         if (cur.endsWith('.webp')) {
-           this.onerror = function(){ this.src = `data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect fill=\"%23f3f4f6\" width=\"100\" height=\"100\"/><text y=\"62\" x=\"50\" text-anchor=\"middle\" font-size=\"42\">🏪</text></svg>`; };
-           this.src = `https://djowda.dz/assets/avatars/${comp.cT}/${comp.aI}.svg`;
-           return;
-         }
-       }
-       if (cur.startsWith('https://djowda.dz')) {
-         if (cur.endsWith('.svg')) {
-           this.onerror = null;
-           this.src = cur.replace(/\.svg$/i, '.webp');
-           return;
-         }
-       }
-     } catch (e) {}
-     this.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text y="62" x="50" text-anchor="middle" font-size="42">🏪</text></svg>`;
-   };
+  const av = $('compDetailAvatar');
+  av.dataset.type = comp.cT || 's';
+  av.dataset.id   = comp.aI || 1;
+  av.src = avatarUrl(comp.cT, comp.aI || 1);
 
   // Reset tabs and show loading
   switchDetailTab('products');
@@ -550,16 +511,17 @@ function renderRemoteListingGrid(gridId, entries) {
   grid.innerHTML = '';
   entries.forEach(e => {
     const p = PRODUCTS.find(p => p.id===e.productId) || {name:`#${e.productId}`,img:''};
+    const name = esc(p.name);
     const price = (e.price/100).toFixed(1);
     const div = document.createElement('div');
     div.className = 'product-card';
     div.innerHTML = `
       <div class="product-img-wrap">
-        <img class="product-img" src="${p.img}" alt="${p.name}" loading="lazy" />
+        <img class="product-img" src="${p.img}" alt="${name}" loading="lazy" />
         <div class="product-badge available"></div>
       </div>
       <div class="product-info">
-        <div class="product-name">${p.name}</div>
+        <div class="product-name">${name}</div>
         <div class="product-price">${price} DA</div>
         <div class="product-status">Dispo</div>
       </div>`;
@@ -574,15 +536,16 @@ function renderRemoteIdGrid(gridId, ids, badgeClass) {
   grid.innerHTML = '';
   ids.forEach(id => {
     const p = PRODUCTS.find(p => p.id===id) || {name:`#${id}`,img:''};
+    const name = esc(p.name);
     const div = document.createElement('div');
     div.className = 'product-card';
     div.innerHTML = `
       <div class="product-img-wrap">
-        <img class="product-img" src="${p.img}" alt="${p.name}" loading="lazy" />
+        <img class="product-img" src="${p.img}" alt="${name}" loading="lazy" />
         <div class="product-badge ${badgeClass}"></div>
       </div>
       <div class="product-info">
-        <div class="product-name">${p.name}</div>
+        <div class="product-name">${name}</div>
         <div class="product-price">KG</div>
         <div class="product-status">${badgeClass==='ask'?'Asking':'Donating'}</div>
       </div>`;
@@ -618,14 +581,13 @@ function switchDetailTab(tab) {
 
 // ─── WIRE UP ALL EVENTS ───────────────────────────────────────────────────
 
-// Wire up all event listeners immediately and also on DOMContentLoaded
+// Wire up all event listeners
 function setupAllListeners() {
   console.log('[DIFP] Setting up event listeners');
   
   // Type selector buttons
   document.querySelectorAll('.type-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      console.log('[DIFP] Type button clicked');
       document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     });
@@ -634,19 +596,12 @@ function setupAllListeners() {
   // Join button
   const joinBtn = $('joinBtn');
   if (joinBtn) {
-    console.log('[DIFP] Found join button, attaching listener');
-    joinBtn.addEventListener('click', () => {
-      console.log('[DIFP] Join button clicked');
-      doJoin();
-    });
-  } else {
-    console.warn('[DIFP] Join button not found');
+    joinBtn.addEventListener('click', doJoin);
   }
 
   // Range slider label
   const rangeSlider = $('rangeSlider');
   if (rangeSlider) {
-    console.log('[DIFP] Found range slider, attaching listener');
     rangeSlider.addEventListener('input', e => {
       $('rangeVal').textContent = e.target.value + ' lobbie' + (e.target.value==='1'?'':'s');
     });
@@ -673,7 +628,6 @@ function setupAllListeners() {
     'toggleSwitch-donate':     () => toggleSwitch('donateSwitch'),
   };
 
-  console.log('[DIFP] Setting up event delegation with ACTION_MAP');
   document.addEventListener('click', function handleDocumentClick(e) {
     const el = e.target.closest('[data-action]');
     if (!el) return;
@@ -681,22 +635,16 @@ function setupAllListeners() {
     const action = el.getAttribute('data-action');
     if (!action) return;
     
-    console.log('[DIFP] Clicked action:', action);
-
     // Handle closeModal actions
     if (action.startsWith('closeModal-')) {
       const modalId = action.replace('closeModal-','');
-      console.log('[DIFP] Closing modal:', modalId);
       closeModal(modalId);
       return;
     }
     
     // Handle actions from map
     if (ACTION_MAP.hasOwnProperty(action) && typeof ACTION_MAP[action] === 'function') {
-      console.log('[DIFP] Executing mapped action:', action);
       ACTION_MAP[action]();
-    } else {
-      console.warn('[DIFP] Action not in map or not a function:', action);
     }
   });
 
@@ -704,24 +652,16 @@ function setupAllListeners() {
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', function handleModalBackdropClick(e) {
       if (e.target === overlay) {
-        console.log('[DIFP] Modal backdrop clicked, closing');
         overlay.classList.remove('show');
       }
     });
   });
-  
-  console.log('[DIFP] All event listeners attached');
 }
 
-// Try to set up immediately if DOM is ready
+// Module entry point
 if (document.readyState === 'loading') {
-  console.log('[DIFP] DOM state is "loading", waiting for DOMContentLoaded');
   document.addEventListener('DOMContentLoaded', setupAllListeners);
 } else {
-  console.log('[DIFP] DOM state is "' + document.readyState + '", setting up now');
   setupAllListeners();
 }
-
-// Also set up on DOMContentLoaded as a safety measure
-document.addEventListener('DOMContentLoaded', setupAllListeners);
 console.log('[DIFP] Module loaded');
